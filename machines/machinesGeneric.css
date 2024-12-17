@@ -1,0 +1,75 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+}
+
+h2 {
+    margin: 0; 
+    color: #333;
+}
+
+p {
+    margin: 0; 
+}
+pre {  /* Para que se vea igual que una p */
+    margin: 0;
+    padding: 0; 
+    font-family: inherit; 
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+section {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+ul, ol {
+    padding-left: 20px;
+}
+
+
+.inicio {
+    border: 1px solid #007bff;
+    background-color: #e7f1ff;
+}
+
+.medio {
+    border: 1px solid #ed8626;
+    background-color: #f4ceb8;
+}
+
+.final {
+    border: 1px solid #269982;
+    background-color: #c1efdf;
+}
+
+.advertencia {
+    border: 1px solid #dc3545;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+hr {
+    border: 1px solid #ccc;
+    margin: 20px 0;
+}
+

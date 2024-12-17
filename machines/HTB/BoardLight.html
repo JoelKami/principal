@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image" href="../../assets/1slqxwuw.bmp">
+    <title>Writeup</title>
+    <link rel="stylesheet" href="../machinesGeneric.css">
+</head>
+<body>
+    <header>
+        <h1>BoardLigth</h1>
+    </header>
+    <section class="inicio">
+        <h2>Primeros pasos</h2>
+        <h3>(Reconocimiento).</h3>
+        <ul>
+            <li>Organizamos TMUX.</li>
+            <li>Activamos VPN.</li>
+            <li>Le hacemos un ping a la máquina. (Está activa o no). Posible máquina Linux.</li>
+            <li>Creamos un directorio como la IP o nombre de la máquina.</li>
+            <li>Ponemos la IP de la máquina en un lugar visible.</li>
+	    <li>Creamos los directorios de trabajo.</li>
+        </ul>
+
+        <h4>Empezamos escaneo con NMAP.</h4>
+          <li>Buscamos codename con launchpad sobre algún servicio, un posible Ubuntu Focal.</li>
+        <h3>Puertos abiertos</h3>
+        <ul class="tareas">
+            <li> 22 - SSH. Version 8.2p1</li>
+            <li> 80 - HTTP. Apache HTTPD 2.4.41</li>
+        </ul>
+    </section>
+
+    <section class="medio">
+        <div class="step">
+            <h2>Investigación (Intrusión).</h2>
+            <h3>(Reconocimiento/Enumeración).</h3>
+            <li>22.</li>
+            <p>No tengo credenciales de momento.</p>
+            <br>
+            <li>80.</li>
+            <p>wahtweb. Correo info@board.htb, nos hace pensar en un dominio, poco más.</p>
+            <p>En la web. No hay muchas funcionalidades, pero hay varias rutas/recursos. <br> Código fuente. Línea comentada con un recurso portfolio.php. Nos dice "File not found.", me hace pensar en que pude haber más.</p>
+            <p><br>Fuzzeamos por URIs. Por extensiones PHP también para ver si encuentro algo más. Las que sabíamos:</p>
+            <pre>
+    /about.php
+    /contact.php
+    /index.php
+    /do.php
+            </pre>
+            <p>Metamos board.htb en el /etc/hosts, pero no cambia la web.<br> Fuzzear Subdominios. SubDominio crm. En la web hay un login de Dolibarr. Dolibarr 17.0.0.</p>
+            <p><br>Dolibarr. Es software para Planificación de Recursos Empresariales y Gestión de Relaciones con los Clientes open source para PyMES. Hecho en PHP.</p>
+            <p>Usamos admin:admin y nos deja.</p>
+            <p>Encontrar vulnerabilidades asociadas a su versión. En github <a href="https://github.com/dollarboysushil/Dolibarr-17.0.0-Exploit-CVE-2023-30253" target="_blank">CVE-2023-30253</a> se habla de crear un website y entrale por ahí.</p>
+            <p>No me deja usar php, pero poniendo ?pHp ... me deja. Ruta donde está el website, abrirlo una vez creamos el website, la página, y cuando a esta última le hayamos metido el código en PHP. <a href="http://crm.board.htb/public/website/index.php?website=test&pageref=test" target="_blank">http://crm.board.htb/public/website/index.php?website=test&pageref=test</a> test es el nombre del website.</p>
+            <p>Nos ponemos en escucha, cargamos el website y pa deentro.</p>
+        </div>
+    </section>
+
+    <section class="final">
+        <div class="step">
+            <h2>Escalada</h2>
+            <p>Enumerar todo el sistema. Efectivamente, Ubuntu Focal.</p>
+            <p>Usuarios válidos a nivel de sistema:</p>
+            <pre>
+    root
+    larissa
+    www-data
+            </pre>
+            <p>Cositas en el directorio /tmp</p>
+            <pre>
+    exploit Son archivos de larissa.
+            </pre>
+            <p>Tratemos de ver tareas cron.</p>
+            <p>Puertos abiertos internamente.</p>
+            <pre>
+    22
+    53
+    3306
+    33060
+    33334
+    47146
+    59962
+    60548
+            </pre>
+            <p>Se hablan cositas de LDAP. Debemos buscar mucho más en el directorio crm.board.htb. En el composer.jsom.disabled hay cosas.</p>
+            <p>En htdocs/conf hay cositas. <strong>dolibarrowner:serverfun2$2023!!</strong> : credenciales de acceso a la Base de Datos. Tenemos hashes en la DB:</p>
+            <pre>
+    $2y$10$VevoimSke5Cd1/nX1Ql9Su6RstkTRe7UX1Or.cm8bZo56NjCMJzCm
+    $2y$10$gIEKOl7VZnr5KLbBDzGbL.YuJxwz5Sdl5ji3SEuiUSlULgAhhjH96
+            </pre>
+            <p>Pero no se rompen fácilmente. Reutilicemos la contraseña con el usuario larissa. Y nos deja. <strong>larissa:serverfun2$2023!!</strong></p>
+            <br> <p>Elevar a root. <br> ( En /larissa hay un exploit que intenta abusar de una vulnerabilidad de enlightenment_sys que tiene privilegios SUID. Lo habíamos visto al enumerar SUID de root, de hecho podemos copiarlo, buscar un exploit en internet, y nos sale el mismo (<a href="https://github.com/MaherAzzouzi/CVE-2022-37706-LPE-exploit" target="_blank">CVE-2022-37706-LPE-exploit</a>) explica que debe empezar por /dev, etc.).</p>
+            <p>De ahí los ';' y exploit en /tmp, los llama y como se ejecuta el punto y coma, separa otro comando que spawnea una shell, como root lo hace, pues es como root.)<br><br> ¿Por qué lo de arriba en paréntesis?, porque no sé si alguien más creó el archivo del exploit, así que tengamos en cuenta que enumerando todo habríamos visto el SUID, y tendríamos que haber investigado sobre enlightenment (se puede usar como comando incluso), haber conseguido su versión, etc., y posterior a ello, encontrar el exploit que utilizamos.</p>
+            <p>Lo ejecuto y pa deeeeeentro.</p>
+        </div>
+
+        <h3>FIN.</h3>
+    </section>
+</body>
+</html>
